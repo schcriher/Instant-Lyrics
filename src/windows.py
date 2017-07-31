@@ -63,6 +63,10 @@ class LyricsWindow(Gtk.Window):
         submit.connect("clicked", self.fetch_lyrics)
         entry_hbox.pack_start(submit, True, True, 0)
 
+        save = Gtk.Button.new_with_label("Save Lyrics") 
+        save.connect("clicked", self.save_lyrics) 
+        entry_hbox.pack_start(save, True, True, 0)
+
         return entry_hbox
 
     def create_lyrics_box(self, app):
@@ -106,6 +110,27 @@ class LyricsWindow(Gtk.Window):
             target=self.put_lyrics, kwargs={'song': input})
         thread.daemon = True
         thread.start()
+
+    def save_lyrics(self, source=None): 
+        lyrics = self.lyrics.get_text() 
+        if lyrics: 
+            from os.path import expanduser 
+            dialog = Gtk.FileChooserDialog( 
+                "Please choose a file", self, 
+                Gtk.FileChooserAction.SAVE, 
+                (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL, 
+                 Gtk.STOCK_SAVE, Gtk.ResponseType.OK)) 
+            name = self.input.get_text() + ".txt" 
+            filename = expanduser("~/") + name 
+            dialog.set_current_name(name) 
+            dialog.set_filename(filename) 
+            dialog.set_do_overwrite_confirmation(True) 
+            response = dialog.run() 
+            if response == Gtk.ResponseType.OK: 
+                dst = dialog.get_filename() 
+                with open(dst, mode="w", encoding="utf-8", errors="namereplace") as f: 
+                    f.write(lyrics) 
+            dialog.destroy()
 
     def get_spotify_song_data(self):
         session_bus = dbus.SessionBus()
